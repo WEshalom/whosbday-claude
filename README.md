@@ -44,8 +44,15 @@ Perfect for organizations, communities, or groups who want to ensure everyone ge
    ```
 
 2. **Run the setup script:**
+
+   **Linux/Mac:**
    ```bash
    ./docker-setup.sh
+   ```
+
+   **Windows (CMD/PowerShell):**
+   ```cmd
+   docker-setup.bat
    ```
 
 3. **Create admin user:**
