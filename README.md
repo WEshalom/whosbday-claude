@@ -33,14 +33,41 @@ Perfect for organizations, communities, or groups who want to ensure everyone ge
 
 ## Installation
 
-### Prerequisites
+### Option 1: Docker (Recommended - Easiest)
 
+**Prerequisites:** Docker and Docker Compose installed
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/WEshalom/whosbday-claude.git
+   cd whosbday-claude
+   ```
+
+2. **Run the setup script:**
+   ```bash
+   ./docker-setup.sh
+   ```
+
+3. **Create admin user:**
+   ```bash
+   docker compose exec app php artisan make:filament-user
+   ```
+
+4. **Access the application:**
+   - Open browser to `http://localhost:8000`
+   - Login with your admin credentials
+
+**That's it! 🎉**
+
+### Option 2: Manual Installation
+
+**Prerequisites:**
 - PHP 8.2 or higher
 - Composer
 - Node.js & NPM
 - SQLite (or MySQL/PostgreSQL)
 
-### Steps
+**Steps:**
 
 1. **Clone the repository:**
    ```bash
@@ -247,12 +274,64 @@ case 'email':
     break;
 ```
 
+## Docker Commands
+
+If you're using Docker, use these commands:
+
+### Start containers:
+```bash
+docker compose up -d
+```
+
+### Stop containers:
+```bash
+docker compose down
+```
+
+### Run artisan commands:
+```bash
+docker compose exec app php artisan [command]
+
+# Examples:
+docker compose exec app php artisan birthdays:notify
+docker compose exec app php artisan make:filament-user
+docker compose exec app php artisan migrate
+```
+
+### View logs:
+```bash
+docker compose logs -f app
+```
+
+### Access container shell:
+```bash
+docker compose exec app bash
+```
+
+### Rebuild containers:
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+### Run scheduled notifications (in Docker):
+```bash
+docker compose exec app php artisan schedule:work
+```
+
 ## Development
 
-### Run development server:
+### Run development server (Manual Installation):
 ```bash
 php artisan serve
 npm run dev
+```
+
+### Run development server (Docker):
+```bash
+# Already running on http://localhost:8000
+# To watch assets for changes:
+docker compose run --rm node npm run dev
 ```
 
 ### Run tests:

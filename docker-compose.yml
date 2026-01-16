@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # PHP Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whosbday-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - whosbday-network
+    depends_on:
+      - nginx
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: whosbday-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - whosbday-network
+
+  # Node for building assets
+  node:
+    image: node:20-alpine
+    container_name: whosbday-node
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    command: sh -c "npm install && npm run build"
+    networks:
+      - whosbday-network
+
+networks:
+  whosbday-network:
+    driver: bridge
