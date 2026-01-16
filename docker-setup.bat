@@ -1,64 +1,81 @@
 @echo off
-echo 🚀 Setting up Birthday Notification System with Docker...
+echo ========================================
+echo Birthday Notification System - Docker Setup
+echo ========================================
 echo.
 
-REM Build and start containers
-echo 📦 Building Docker containers...
-docker compose up -d --build
-
-REM Wait for containers to be ready
-echo ⏳ Waiting for containers to start...
-timeout /t 5 /nobreak >nul
-
-REM Install Composer dependencies
-echo 📥 Installing Composer dependencies...
-docker compose exec app composer install --no-interaction
-
-REM Create .env file if it doesn't exist
-if not exist .env (
-    echo 📝 Creating .env file...
-    docker compose exec app cp .env.example .env
+REM Check if Docker is running
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Docker is not running!
+    echo Please start Docker Desktop and try again.
+    pause
+    exit /b 1
 )
 
-REM Generate application key
-echo 🔑 Generating application key...
-docker compose exec app php artisan key:generate
+echo Step 1: Building Docker containers...
+docker compose up -d --build
+if errorlevel 1 (
+    echo ERROR: Failed to build containers!
+    pause
+    exit /b 1
+)
 
-REM Create SQLite database
-echo 💾 Creating SQLite database...
-docker compose exec app touch database/database.sqlite
+echo.
+echo Step 2: Waiting for containers to start...
+timeout /t 10 /nobreak >nul
 
-REM Run migrations
-echo 🗃️ Running database migrations...
-docker compose exec app php artisan migrate --force
+echo.
+echo Step 3: Installing Composer dependencies...
+docker compose exec -T app composer install --no-interaction --optimize-autoloader
+if errorlevel 1 (
+    echo WARNING: Composer install failed, trying again...
+    timeout /t 5 /nobreak >nul
+    docker compose exec -T app composer install --no-interaction
+)
 
-REM Set permissions
-echo 🔒 Setting permissions...
-docker compose exec app chown -R www-data:www-data /var/www/storage
-docker compose exec app chown -R www-data:www-data /var/www/bootstrap/cache
+echo.
+echo Step 4: Setting up environment file...
+if not exist .env (
+    echo Creating .env file...
+    copy .env.example .env >nul
+)
 
-REM Build assets
-echo 🎨 Building frontend assets...
+echo.
+echo Step 5: Generating application key...
+docker compose exec -T app php artisan key:generate --force
+
+echo.
+echo Step 6: Creating database...
+docker compose exec -T app mkdir -p database
+docker compose exec -T app sh -c "touch database/database.sqlite"
+
+echo.
+echo Step 7: Running migrations...
+docker compose exec -T app php artisan migrate --force
+
+echo.
+echo Step 8: Setting permissions...
+docker compose exec -T app chmod -R 775 storage bootstrap/cache
+
+echo.
+echo Step 9: Installing NPM dependencies...
 docker compose run --rm node npm install
+
+echo.
+echo Step 10: Building assets...
 docker compose run --rm node npm run build
 
 echo.
-echo ✅ Setup complete!
+echo ========================================
+echo Setup Complete!
+echo ========================================
 echo.
-echo 📋 Next steps:
-echo 1. Create an admin user:
-echo    docker compose exec app php artisan make:filament-user
+echo Next step: Create an admin user
+echo Run this command:
+echo   docker compose exec app php artisan make:filament-user
 echo.
-echo 2. Access the application:
-echo    http://localhost:8000
-echo.
-echo 3. Run birthday notifications:
-echo    docker compose exec app php artisan birthdays:notify
-echo.
-echo 📌 Useful commands:
-echo    docker compose up -d          # Start containers
-echo    docker compose down           # Stop containers
-echo    docker compose logs -f app    # View logs
-echo    docker compose exec app bash  # Access container shell
+echo Then open your browser to:
+echo   http://localhost:8000
 echo.
 pause
